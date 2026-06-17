@@ -27,6 +27,7 @@ STATIC_DIR = APP_DIR / "static"
 MODEL_NAME: str = os.getenv("MODEL_NAME", "openai-responses:o4-mini")
 LLM_BASE_URL: str = os.getenv("LLM_BASE_URL", "http://localhost:8011/v1")
 LLM_API_KEY: str | None = os.getenv("LLM_API_KEY")
+USE_RATE_LIMITER: bool = (LLM_API_KEY or "no-key-required") != "no-key-required"
 
 
 def get_model() -> str | OpenAIModel:
@@ -111,12 +112,13 @@ def create_mcp_servers() -> list[AbstractToolset]:
 
     # Jina AI Reader — converts any URL to readable markdown
     # Requires JINA_API_KEY (free tier available at https://jina.ai/)
+    # MCP endpoint: https://mcp.jina.ai/v1
     jina_key = os.getenv("JINA_API_KEY")
     if jina_key:
         servers.append(
             PrefixedToolset(
                 MCPToolset(
-                    "https://r.jina.ai/mcp",
+                    "https://mcp.jina.ai/v1",
                     headers={"Authorization": f"Bearer {jina_key}"},
                     max_retries=3,
                 ),

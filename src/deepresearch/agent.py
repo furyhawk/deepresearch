@@ -32,7 +32,7 @@ from pydantic_deep import (
 from pydantic_deep.toolsets.plan import create_plan_toolset
 from pydantic_deep.types import SubAgentConfig
 
-from .config import SKILLS_DIR, get_model
+from .config import SKILLS_DIR, USE_RATE_LIMITER, get_model
 from .middleware import RateLimitRetryCapability
 from .prompts import RESEARCH_PROMPT
 from .todo_toolset import ForgiveWriteTodosCapability
@@ -423,7 +423,8 @@ def create_research_agent(
         skills=PROGRAMMATIC_SKILLS,
         skill_directories=[{"path": str(SKILLS_DIR), "recursive": True}],
         hooks=HOOKS,
-        middleware=[ForgiveWriteTodosCapability(), RateLimitRetryCapability(), *(middleware or [])],
+        middleware=[ForgiveWriteTodosCapability(), *(middleware or [])]
+        + ([RateLimitRetryCapability()] if USE_RATE_LIMITER else []),
         context_manager=True,
         context_manager_max_tokens=200_000,
         patch_tool_calls=True,

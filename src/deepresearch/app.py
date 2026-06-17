@@ -652,7 +652,7 @@ async def lifespan(app: FastAPI):
     )
     session_manager.start_cleanup_loop(interval=300)
 
-    def _print_banner(servers: list) -> None:
+    def _print_banner(servers: list, middleware: list | None = None) -> None:
         names = [getattr(s, "prefix", "unknown") for s in servers]
         print("=" * 60)
         print("DeepResearch — Full-Featured Research Agent")
@@ -662,14 +662,16 @@ async def lifespan(app: FastAPI):
         print(f"  Workspaces     : {WORKSPACES_DIR}")
         print("  Runtime        : python-datascience")
         print("  Hooks          : audit_logger, safety_gate")
-        print("  Capabilities   : AuditCapability, PermissionCapability")
+        if middleware:
+            mw_names = [type(m).__name__ for m in middleware]
+            print(f"  Middleware     : {', '.join(mw_names)}")
         print("  Subagents      : code-reviewer, general-purpose + dynamic factory")
         print("  Execute        : enabled (human-in-the-loop)")
         print("  Image support  : enabled")
         print("  Plan mode      : enabled (ask_user)")
         print("=" * 60)
 
-    _print_banner(mcp_servers)
+    _print_banner(mcp_servers, middleware=[audit_cap, permission_cap])
 
     # Start MCP server connections — retry loop that drops failing servers
     remaining = list(mcp_servers)
@@ -688,7 +690,7 @@ async def lifespan(app: FastAPI):
             )
             remaining = [s for s in remaining if getattr(s, "prefix", "") not in failed]
             agent = create_research_agent(mcp_servers=remaining, middleware=[audit_cap, permission_cap])
-            _print_banner(remaining)
+            _print_banner(remaining, middleware=[audit_cap, permission_cap])
         else:
             break
 

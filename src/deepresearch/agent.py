@@ -425,6 +425,7 @@ def create_research_agent(
         hooks=HOOKS,
         middleware=[ForgiveWriteTodosCapability(), *(middleware or [])]
         + ([RateLimitRetryCapability()] if USE_RATE_LIMITER else []),
+        include_memory=False,
         context_manager=True,
         context_manager_max_tokens=200_000,
         patch_tool_calls=True,
